@@ -43,6 +43,11 @@ genSelect.innerHTML = `
   </div>
 `;
 
+const bodyContainer = document.querySelector("#bodyContainer");
+bodyContainer.innerHTML = `
+  <h1 id="pokemonName">Current Pokemon</h1>
+`;
+const pokemonName = document.querySelector("#pokemonName");
 const dropdown = document.querySelector("#genDropdown");
 const pokemonDropdown = document.querySelector("#pokemonDropdown");
 
@@ -79,6 +84,7 @@ const setInitGenData = async () => {
 
 const processGenData = (currentGenData) => {
   if (!currentGenData) return;
+  console.log(currentGenData);
   const pokemon = currentGenData.pokemon_species;
   return pokemon;
 };
@@ -90,6 +96,12 @@ const onGenSelect = async (gen) => {
   console.log(currentGenData);
 };
 
+const clearPokemonDropdown = () => {
+  while (pokeDropdownContent.firstChild) {
+    pokeDropdownContent.removeChild(pokeDropdownContent.lastChild);
+  }
+};
+
 setInitGenData();
 
 const pokeDropdownContent = document.querySelector("#pokemonDropdownContent");
@@ -97,33 +109,55 @@ const pokeDropdownContent = document.querySelector("#pokemonDropdownContent");
 const searchData = (searchTerm) => {
   if (!currentGenData) return;
 
+  if (!searchTerm) {
+    pokemonDropdown.classList.remove("is-active");
+    clearPokemonDropdown();
+    return;
+  }
+
+  clearPokemonDropdown();
   let filteredPokemon = currentGenData.filter((pokemon) => {
     return pokemon.name.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
   });
+  let topTwentyPokemon = filteredPokemon.slice(0, 20);
 
-  if (!filteredPokemon) return;
   pokemonDropdown.classList.add("is-active");
 
-  for (let pokemon of filteredPokemon) {
+  console.log(filteredPokemon);
+
+  for (let pokemon of topTwentyPokemon) {
     const option = document.createElement("a");
     option.classList.add("dropdown-item");
     option.innerText = `${pokemon.name}`;
     option.addEventListener("click", () => {
       input.value = pokemon.name;
+      onPokemonSelect(pokemon);
     });
     pokeDropdownContent.appendChild(option);
   }
 };
 
+const onPokemonSelect = async (pokemon) => {
+  const processedURL = pokemon.url.split("/");
+  processedURL.pop();
+  const genID = processedURL.pop().toString();
+
+  const response = await axios.get(
+    `https://pokeapi.co/api/v2/pokemon/${genID}`
+  );
+  console.log(response.data);
+  pokemonName.innerText = `${response.data.name}`;
+};
+
 const input = document.querySelector("#genSearch");
 input.addEventListener("input", (event) => {
   searchData(event.target.value);
-  console.log(event.target.value);
 });
 
 document.addEventListener("click", (event) => {
   if (!genSelect.contains(event.target)) {
     dropdown.classList.remove("is-active");
     pokemonDropdown.classList.remove("is-active");
+    clearPokemonDropdown();
   }
 });
