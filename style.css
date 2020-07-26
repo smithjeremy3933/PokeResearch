@@ -1,0 +1,27 @@
+#rightMenu {
+  margin-right: 5%;
+}
+
+#webHeader {
+  margin-top: 2%;
+  font-size: 30px;
+}
+
+#navContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+#pokeSelectContainer {
+  display: flex;
+  justify-content: space-around;
+}
+
+#genSelectRoot {
+  margin: 5%;
+  padding: 2%;
+}
+
+#pokemonSearchRoot {
+  margin-top: 2%;
+}
