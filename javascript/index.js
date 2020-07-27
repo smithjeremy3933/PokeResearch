@@ -1,17 +1,21 @@
 let currentGenData;
 
+// Fetch all the generation with thier URLs to make succeeding API calls to
+// get a list of pokemon from any generation.
 const fetchAllGenData = async () => {
   const response = await axios.get(`https://pokeapi.co/api/v2/generation/`);
   return response.data;
 };
 
-const fetchGenData = async (generation = 1) => {
+// Fetch pokemon generation data
+const fetchGenData = async (generation = "1") => {
   const response = await axios.get(
     `https://pokeapi.co/api/v2/generation/${generation}`
   );
   return response.data;
 };
 
+// Initalize the pokemon search input
 const pokemonSearch = document.querySelector("#pokemonSearchRoot");
 pokemonSearch.innerHTML = `
   <label><b>Search for a Pokemon</b></label>
@@ -23,6 +27,7 @@ pokemonSearch.innerHTML = `
   </div>
 `;
 
+// Initialize the generation selection dropdown text.
 const genSelect = document.querySelector("#genSelectRoot");
 genSelect.innerHTML = `
   <div id="genDropdown" class="dropdown">
@@ -42,28 +47,27 @@ genSelect.innerHTML = `
   </div>
 `;
 
+// Initialize the body container, which contain all the indiviual pokemons info.
 const bodyContainer = document.querySelector("#bodyContainer");
 bodyContainer.innerHTML = `
   <div id="pokemonNameContainer">
-    <h1 id="pokemonName">Current Pokemon</h1>
+    <h1 id="pokemonName">Select a pokemon from any generation!!</h1>
   </div>
 `;
 
-const clearPokemonNameContainer = () => {
-  while (pokemonNameContainer.firstChild) {
-    pokemonNameContainer.removeChild(pokemonNameContainer.lastChild);
-  }
-};
-
+// Grabs some DOM elements to manipulate.
 const pokemonNameContainer = document.querySelector("#pokemonNameContainer");
 const pokemonName = document.querySelector("#pokemonName");
 const dropdown = document.querySelector("#genDropdown");
 const pokemonDropdown = document.querySelector("#pokemonDropdown");
+const infoContainer = document.createElement("div");
 
+// Activates the generation dropdown on click.
 dropdown.addEventListener("click", () => {
   dropdown.classList.add("is-active");
 });
 
+// Initializes all the generation and put them into the dropdown.
 const setInitGenData = async () => {
   const genData = await fetchAllGenData();
   const dropdownContent = document.querySelector("#dropdownContent");
@@ -71,6 +75,7 @@ const setInitGenData = async () => {
   processInitGenData(genData, dropdownContent, dropdownText);
 };
 
+// Adds the generation options to the dropdown.
 const processInitGenData = (genData, dropdownContent, dropdownText) => {
   let genIndex = 1;
   for (let gen of genData.results) {
@@ -90,6 +95,7 @@ const processInitGenData = (genData, dropdownContent, dropdownText) => {
   }
 };
 
+// Capitalizes the first letter of the currents pokemons name.
 const processGenText = (gen) => {
   let [text, num] = gen.name.split("-");
   num = num.toUpperCase();
@@ -97,6 +103,14 @@ const processGenText = (gen) => {
   return [text, num].join("-");
 };
 
+// Fetch data corresponding to the generation selected in the dropdown.
+const onGenSelect = async (gen) => {
+  const response = await fetchGenData(gen);
+  currentGenData = processGenData(response);
+  console.log(currentGenData);
+};
+
+// Gets the pokemon from the current generation data.
 const processGenData = (currentGenData) => {
   if (!currentGenData) return;
   console.log(currentGenData);
@@ -104,22 +118,20 @@ const processGenData = (currentGenData) => {
   return pokemon;
 };
 
-const onGenSelect = async (gen) => {
-  const response = await fetchGenData(gen);
-  currentGenData = processGenData(response);
-  console.log(currentGenData);
-};
-
+// Clears the pokemon search dropdown
 const clearPokemonDropdown = () => {
   while (pokeDropdownContent.firstChild) {
     pokeDropdownContent.removeChild(pokeDropdownContent.lastChild);
   }
 };
 
+// Sets initial generation data.
 setInitGenData();
 
 const pokeDropdownContent = document.querySelector("#pokemonDropdownContent");
 
+// Searches through the current generation data to find
+// the pokemon the user is typing in.
 const searchData = (searchTerm) => {
   if (!currentGenData) return;
 
@@ -138,6 +150,7 @@ const searchData = (searchTerm) => {
   }
 };
 
+// Gets the top twenty pokemon.
 const getToptwentyResults = (genData, searchTerm) => {
   let filteredPokemon = genData.filter((pokemon) => {
     return pokemon.name.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
@@ -146,6 +159,7 @@ const getToptwentyResults = (genData, searchTerm) => {
   return topTwentyPokemon;
 };
 
+// Adds pokemon to the pokemon search dropdown.
 const processPokeDropdown = (pokemon, element) => {
   const pokemonName = pokemon.name[0].toUpperCase() + pokemon.name.slice(1);
   const option = document.createElement("a");
@@ -158,9 +172,18 @@ const processPokeDropdown = (pokemon, element) => {
   element.appendChild(option);
 };
 
+// Fetch data for the individual pokemon and show the
+// details on the screen.
 const onPokemonSelect = async (pokemon) => {
-  clearPokemonNameContainer();
+  clearContainer(pokemonNameContainer);
+  clearContainer(infoContainer);
+  const data = await getPokemonData(pokemon);
+  initNameText(data);
+  initInfoText(data);
+};
 
+// Fetches more specific data on the selected pokemon.
+const getPokemonData = async (pokemon) => {
   const processedURL = pokemon.url.split("/");
   processedURL.pop();
   const genID = processedURL.pop().toString();
@@ -168,26 +191,42 @@ const onPokemonSelect = async (pokemon) => {
     `https://pokeapi.co/api/v2/pokemon/${genID}`
   );
   console.log(response.data);
+  return response.data;
+};
 
-  const lowercaseName = response.data.name;
-  const capitalizedName =
-    lowercaseName[0].toUpperCase() + lowercaseName.slice(1);
-  const types = response.data.types;
+// Fills in the info container with the selected pokemon's info.
+const initInfoText = (data) => {
+  const { height, weight } = data;
+  const heightWeightStats = document.createElement("div");
+  heightWeightStats.classList.add("physical-container");
+  heightWeightStats.innerHTML = `
+    <b class="info-text" >Height: ${height} inches,</b>
+    <b class="info-text" >Weight: ${weight} lbs</b> 
+  `;
+  infoContainer.classList.add("info-container");
+  infoContainer.appendChild(heightWeightStats);
+  bodyContainer.appendChild(infoContainer);
+};
+
+// Fills the header name text and pokemon image.
+const initNameText = (data) => {
+  const { name, types } = data;
+  const { sprites } = data;
+  const capitalizedName = name[0].toUpperCase() + name.slice(1);
+  const typeText = document.createElement("h1");
   const nameEl = document.createElement("b");
   nameEl.classList.add("name-text");
   nameEl.innerText = `${capitalizedName}`;
-  pokemonNameContainer.appendChild(nameEl);
   pokemonName.classList.add("name-text");
-  const typeText = document.createElement("h1");
   typeText.innerHTML = `<b>- Type(s): (</b>`;
   typeText.classList.add("name-text");
+  pokemonNameContainer.appendChild(nameEl);
   pokemonNameContainer.appendChild(typeText);
   processPokeType(types, pokemonNameContainer);
-  const divider = document.createElement("hr");
-  divider.classList.add("divider");
-  bodyContainer.appendChild(divider);
+  processPokeImg(sprites);
 };
 
+// Gets the types of the pokemon.
 const processPokeType = (types, element) => {
   let counter = types.length;
   types.map((pokemonType) => {
@@ -203,11 +242,43 @@ const processPokeType = (types, element) => {
   });
 };
 
+// Adds the default image and turns the image shiny on click.
+const processPokeImg = (sprites) => {
+  const imgContainer = document.createElement("div");
+  imgContainer.innerHTML = `
+    <img id="pokemon-image" alt="PokemonImage" src="${sprites.front_default}" />
+  `;
+  pokemonNameContainer.appendChild(imgContainer);
+  const pokeImg = document.querySelector("#pokemon-image");
+  pokeImg.addEventListener("click", () => {
+    imgContainer.innerHTML = `
+    <img id="pokemon-image" alt="PokemonImage" src="${sprites.front_shiny}" />
+  `;
+  });
+};
+
+// Creates a divider.
+const createDivider = (element) => {
+  const divider = document.createElement("hr");
+  divider.classList.add("divider");
+  element.appendChild(divider);
+};
+
+// Clears any container with elements passed to it.
+const clearContainer = (container) => {
+  while (container.firstChild) {
+    container.removeChild(container.lastChild);
+  }
+};
+
+// The pokemon search dropdown input. Listens for
+// whenever a user types in the input field
 const input = document.querySelector("#genSearch");
 input.addEventListener("input", (event) => {
   searchData(event.target.value);
 });
 
+// Closes the dropdown menus when clicking away.
 document.addEventListener("click", (event) => {
   if (!genSelect.contains(event.target)) {
     dropdown.classList.remove("is-active");

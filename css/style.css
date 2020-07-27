@@ -5,7 +5,7 @@
 /* Photo by Jie on Unsplash */
 #main-conatiner {
   height: 1500px;
-  background-image: url("pokeball-background.jpg");
+  background-image: url("../images/pokeball-background.jpg");
   background-size: cover;
 }
 
@@ -24,6 +24,7 @@
 }
 
 #bolded-header {
+  width: 90%;
   padding-bottom: 5%;
   font-size: 700%;
   color: rgb(255, 203, 5);
@@ -63,11 +64,28 @@
 
 #pokemonNameContainer {
   display: flex;
-  padding: 3%;
+  padding: 2%;
+  border-bottom: solid;
+  border-width: 5px;
+  border-color: rgb(42, 117, 187);
 }
 
 .name-text {
-  font-size: 30px;
+  font-size: 35px;
+  margin-top: 37px;
+}
+
+#pokemon-image {
+  height: 150px;
+  width: 150px;
+  margin-left: 330%;
+  right: 0px;
+  border: solid;
+  border-width: 6px;
+  border-radius: 10px;
+  border-color: rgb(42, 117, 187);
+  background-image: url("../images/background.png");
+  background-size: cover;
 }
 
 .divider {
@@ -83,6 +101,14 @@
   border-width: 6px;
   border-radius: 10px;
   border-color: rgb(42, 117, 187);
+}
+
+.info-container {
+  padding: 2%;
+}
+
+.info-text {
+  font-size: 35px;
 }
 
 .footer {
