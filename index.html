@@ -11,16 +11,35 @@
   />
   <link rel="stylesheet" href="style.css" />
   <body>
-    <div class="container">
+    <div id="main-conatiner">
       <div id="navContainer">
-        <h1 id="webHeader"><b>Pokemon Research!</b></h1>
+        <div id="navHeaderContainer">
+          <img
+            id="pokemon-title"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/International_Pok%C3%A9mon_logo.svg/500px-International_Pok%C3%A9mon_logo.svg.png"
+            alt="Pokemon"
+          />
+          <b id="bolded-header">Research!</b>
+        </div>
         <div id="pokeSelectContainer">
           <div id="genSelectRoot"></div>
           <div id="pokemonSearchRoot"></div>
         </div>
       </div>
-      <div id="bodyContainer"></div>
+      <div id="root" class="container">
+        <div id="bodyContainer"></div>
+      </div>
     </div>
+    <footer class="footer">
+      <div class="content has-text-centered">
+        <b>Pokemon Research Created by: Jeremy Smith</b>
+        <img
+          id="footerPic"
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/International_Pok%C3%A9mon_logo.svg/500px-International_Pok%C3%A9mon_logo.svg.png"
+          alt="Pokemon"
+        />
+      </div>
+    </footer>
   </body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>

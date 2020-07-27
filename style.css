@@ -2,19 +2,54 @@
   margin-right: 5%;
 }
 
-#webHeader {
+/* Photo by Jie on Unsplash */
+#main-conatiner {
+  height: 1500px;
+  background-image: url("pokeball-background.jpg");
+  background-size: cover;
+}
+
+#navHeaderContainer {
+  height: 80%;
+  margin-left: 3%;
+  padding-top: 0.5%;
+  display: flex;
+  justify-content: center;
+}
+
+#pokemon-title {
   margin-top: 2%;
-  font-size: 30px;
+  height: 100%;
+  width: 100%;
+}
+
+#bolded-header {
+  padding-bottom: 5%;
+  font-size: 700%;
+  color: rgb(255, 203, 5);
+  -webkit-text-stroke: 6px rgb(42, 117, 187);
 }
 
 #navContainer {
+  position: fixed;
+  top: 0;
+  z-index: 1;
   display: flex;
   justify-content: space-between;
+  height: 160px;
+  width: 100%;
+  margin-bottom: 10px;
+  background-color: red;
+  border-bottom: solid;
+  border-width: 5px;
+  border-color: rgb(42, 117, 187);
 }
 
 #pokeSelectContainer {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  margin-right: 3%;
+  margin-top: 2%;
 }
 
 #genSelectRoot {
@@ -24,4 +59,41 @@
 
 #pokemonSearchRoot {
   margin-top: 2%;
+}
+
+#pokemonNameContainer {
+  display: flex;
+  padding: 3%;
+}
+
+.name-text {
+  font-size: 30px;
+}
+
+.divider {
+  margin: 5px;
+}
+
+#bodyContainer {
+  position: relative;
+  margin-top: 160px;
+  top: 50px;
+  background-color: rgb(255, 203, 5, 0.8);
+  border: solid;
+  border-width: 6px;
+  border-radius: 10px;
+  border-color: rgb(42, 117, 187);
+}
+
+.footer {
+  padding: 10px !important;
+  border-top: solid;
+  border-width: 5px;
+  border-color: rgb(42, 117, 187);
+  background-color: red;
+}
+
+#footerPic {
+  height: 20%;
+  width: 20%;
 }

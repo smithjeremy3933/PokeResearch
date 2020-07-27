@@ -1,5 +1,4 @@
 let currentGenData;
-let searchTerm = "";
 
 const fetchAllGenData = async () => {
   const response = await axios.get(`https://pokeapi.co/api/v2/generation/`);
@@ -31,7 +30,7 @@ genSelect.innerHTML = `
       <button class="button" aria-haspopup="true" aria-controls="dropdown-menu"/>
         <span id="dropdownGenText" >Generations</span>
         <span class="icon is-small">
-          <i class="fas fa-angle-down" aria-hidden="true"></i>
+          <i class="fas fa-angle-down"></i>
         </span>
       </button>
     </div>
@@ -45,8 +44,18 @@ genSelect.innerHTML = `
 
 const bodyContainer = document.querySelector("#bodyContainer");
 bodyContainer.innerHTML = `
-  <h1 id="pokemonName">Current Pokemon</h1>
+  <div id="pokemonNameContainer">
+    <h1 id="pokemonName">Current Pokemon</h1>
+  </div>
 `;
+
+const clearPokemonNameContainer = () => {
+  while (pokemonNameContainer.firstChild) {
+    pokemonNameContainer.removeChild(pokemonNameContainer.lastChild);
+  }
+};
+
+const pokemonNameContainer = document.querySelector("#pokemonNameContainer");
 const pokemonName = document.querySelector("#pokemonName");
 const dropdown = document.querySelector("#genDropdown");
 const pokemonDropdown = document.querySelector("#pokemonDropdown");
@@ -59,14 +68,13 @@ const setInitGenData = async () => {
   const genData = await fetchAllGenData();
   const dropdownContent = document.querySelector("#dropdownContent");
   const dropdownText = document.querySelector("#dropdownGenText");
-  let genIndex = 1;
-  console.log(genData);
+  processInitGenData(genData, dropdownContent, dropdownText);
+};
 
+const processInitGenData = (genData, dropdownContent, dropdownText) => {
+  let genIndex = 1;
   for (let gen of genData.results) {
-    let [text, num] = gen.name.split("-");
-    num = num.toUpperCase();
-    text = text[0].toUpperCase() + text.slice(1);
-    const genText = [text, num].join("-");
+    const genText = processGenText(gen);
     const option = document.createElement("a");
     option.classList.add("dropdown-item");
     option.innerText = `${genText}`;
@@ -82,6 +90,13 @@ const setInitGenData = async () => {
   }
 };
 
+const processGenText = (gen) => {
+  let [text, num] = gen.name.split("-");
+  num = num.toUpperCase();
+  text = text[0].toUpperCase() + text.slice(1);
+  return [text, num].join("-");
+};
+
 const processGenData = (currentGenData) => {
   if (!currentGenData) return;
   console.log(currentGenData);
@@ -92,7 +107,6 @@ const processGenData = (currentGenData) => {
 const onGenSelect = async (gen) => {
   const response = await fetchGenData(gen);
   currentGenData = processGenData(response);
-
   console.log(currentGenData);
 };
 
@@ -116,37 +130,77 @@ const searchData = (searchTerm) => {
   }
 
   clearPokemonDropdown();
-  let filteredPokemon = currentGenData.filter((pokemon) => {
-    return pokemon.name.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
-  });
-  let topTwentyPokemon = filteredPokemon.slice(0, 20);
-
+  let topTwentyPokemon = getToptwentyResults(currentGenData, searchTerm);
   pokemonDropdown.classList.add("is-active");
 
-  console.log(filteredPokemon);
-
   for (let pokemon of topTwentyPokemon) {
-    const option = document.createElement("a");
-    option.classList.add("dropdown-item");
-    option.innerText = `${pokemon.name}`;
-    option.addEventListener("click", () => {
-      input.value = pokemon.name;
-      onPokemonSelect(pokemon);
-    });
-    pokeDropdownContent.appendChild(option);
+    processPokeDropdown(pokemon, pokeDropdownContent);
   }
 };
 
+const getToptwentyResults = (genData, searchTerm) => {
+  let filteredPokemon = genData.filter((pokemon) => {
+    return pokemon.name.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+  });
+  let topTwentyPokemon = filteredPokemon.slice(0, 20);
+  return topTwentyPokemon;
+};
+
+const processPokeDropdown = (pokemon, element) => {
+  const pokemonName = pokemon.name[0].toUpperCase() + pokemon.name.slice(1);
+  const option = document.createElement("a");
+  option.classList.add("dropdown-item");
+  option.innerText = `${pokemonName}`;
+  option.addEventListener("click", () => {
+    input.value = pokemonName;
+    onPokemonSelect(pokemon);
+  });
+  element.appendChild(option);
+};
+
 const onPokemonSelect = async (pokemon) => {
+  clearPokemonNameContainer();
+
   const processedURL = pokemon.url.split("/");
   processedURL.pop();
   const genID = processedURL.pop().toString();
-
   const response = await axios.get(
     `https://pokeapi.co/api/v2/pokemon/${genID}`
   );
   console.log(response.data);
-  pokemonName.innerText = `${response.data.name}`;
+
+  const lowercaseName = response.data.name;
+  const capitalizedName =
+    lowercaseName[0].toUpperCase() + lowercaseName.slice(1);
+  const types = response.data.types;
+  const nameEl = document.createElement("b");
+  nameEl.classList.add("name-text");
+  nameEl.innerText = `${capitalizedName}`;
+  pokemonNameContainer.appendChild(nameEl);
+  pokemonName.classList.add("name-text");
+  const typeText = document.createElement("h1");
+  typeText.innerHTML = `<b>- Type(s): (</b>`;
+  typeText.classList.add("name-text");
+  pokemonNameContainer.appendChild(typeText);
+  processPokeType(types, pokemonNameContainer);
+  const divider = document.createElement("hr");
+  divider.classList.add("divider");
+  bodyContainer.appendChild(divider);
+};
+
+const processPokeType = (types, element) => {
+  let counter = types.length;
+  types.map((pokemonType) => {
+    const headerText = document.createElement("h1");
+    headerText.classList.add("name-text");
+    if (counter > 1) {
+      headerText.innerHTML = `<b>${pokemonType.type.name},</b>`;
+    } else {
+      headerText.innerHTML = `<b>${pokemonType.type.name})</b>`;
+    }
+    element.appendChild(headerText);
+    counter--;
+  });
 };
 
 const input = document.querySelector("#genSearch");
