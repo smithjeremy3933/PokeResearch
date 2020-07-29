@@ -107,6 +107,10 @@
   padding: 2%;
 }
 
+.physical-container {
+  padding-bottom: 2%;
+}
+
 .info-text {
   font-size: 35px;
 }

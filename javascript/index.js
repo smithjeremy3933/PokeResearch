@@ -47,6 +47,50 @@ genSelect.innerHTML = `
   </div>
 `;
 
+const moveMainContainer = document.createElement("div");
+const movePanelContainer = document.createElement("div");
+const moveInfoContainer = document.createElement("div");
+moveMainContainer.classList.add("columns");
+movePanelContainer.classList.add("column");
+moveInfoContainer.classList.add("column");
+moveMainContainer.appendChild(movePanelContainer);
+moveMainContainer.appendChild(moveInfoContainer);
+
+movePanelContainer.innerHTML = `
+  <article class="panel is-info">
+    <p class="panel-heading">
+      Info
+    </p>
+    <p class="panel-tabs">
+      <a class="is-active">All</a>
+      <a>Public</a>
+      <a>Private</a>
+      <a>Sources</a>
+      <a>Forks</a>
+    </p>
+    <div class="panel-block">
+      <p class="control has-icons-left">
+        <input class="input is-info" type="text" placeholder="Search">
+        <span class="icon is-left">
+          <i class="fas fa-search" aria-hidden="true"></i>
+        </span>
+      </p>
+    </div>
+    <a class="panel-block is-active">
+      <span class="panel-icon">
+        <i class="fas fa-book" aria-hidden="true"></i>
+      </span>
+      bulma
+    </a>
+    <a class="panel-block">
+      <span class="panel-icon">
+        <i class="fas fa-book" aria-hidden="true"></i>
+      </span>
+      marksheet
+    </a>
+  </article>
+`;
+
 // Initialize the body container, which contain all the indiviual pokemons info.
 const bodyContainer = document.querySelector("#bodyContainer");
 bodyContainer.innerHTML = `
@@ -177,7 +221,12 @@ const processPokeDropdown = (pokemon, element) => {
 const onPokemonSelect = async (pokemon) => {
   clearContainer(pokemonNameContainer);
   clearContainer(infoContainer);
+  pokemonNameContainer.innerHTML = `
+    <b class="name-text">Loading...<b>
+    <progress class="progress is-large is-info" max="100">60%</progress>
+  `;
   const data = await getPokemonData(pokemon);
+  pokemonNameContainer.innerHTML = ``;
   initNameText(data);
   initInfoText(data);
 };
@@ -196,7 +245,8 @@ const getPokemonData = async (pokemon) => {
 
 // Fills in the info container with the selected pokemon's info.
 const initInfoText = (data) => {
-  const { height, weight } = data;
+  const { height, weight, moves } = data;
+  const allMoves = moves;
   const heightWeightStats = document.createElement("div");
   heightWeightStats.classList.add("physical-container");
   heightWeightStats.innerHTML = `
@@ -205,7 +255,20 @@ const initInfoText = (data) => {
   `;
   infoContainer.classList.add("info-container");
   infoContainer.appendChild(heightWeightStats);
+  infoContainer.appendChild(moveMainContainer);
   bodyContainer.appendChild(infoContainer);
+};
+
+const filterMoves = (moves) => {
+  const redBlue = {};
+  for (let element of moves) {
+    for (let version of element.version_group_details) {
+      switch (version.version_group.name) {
+        case "red-blue":
+        // redBlue[]
+      }
+    }
+  }
 };
 
 // Fills the header name text and pokemon image.
