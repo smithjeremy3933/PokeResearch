@@ -245,48 +245,83 @@ const getPokemonData = async (pokemon) => {
 
 // Fills in the info container with the selected pokemon's info.
 const initInfoText = (data) => {
-  const { height, weight, moves } = data;
-  const allMoves = moves;
+  if (!data) return;
+  const { height, weight, moves, game_indices } = data;
+  filterMoves(moves);
+  infoContainer.classList.add("info-container");
+  infoContainer.appendChild(getVersionsEl(game_indices));
+  infoContainer.appendChild(getPhysicalEl(height, weight));
+  infoContainer.appendChild(moveMainContainer);
+  bodyContainer.appendChild(infoContainer);
+};
+
+// Return an element containing all the versions the Pokemon
+// appears in.
+const getVersionsEl = (gameIndices) => {
+  const pokeVersions = getPokeVersions(gameIndices);
+  const versionsCol = document.createElement("div");
+  const versionsDiv = document.createElement("div");
+  versionsCol.classList.add("columns");
+  versionsDiv.classList.add("column");
+  versionsCol.appendChild(versionsDiv);
+  versionsDiv.innerHTML = `
+    <b class="info-text" > Versions: </b>
+    <b>${pokeVersions.join(",")}</b>
+  `;
+  return versionsCol;
+};
+
+// Returns an element containing the height and weight of
+// a pokemon.
+const getPhysicalEl = (height, weight) => {
   const heightWeightStats = document.createElement("div");
   heightWeightStats.classList.add("physical-container");
   heightWeightStats.innerHTML = `
     <b class="info-text" >Height: ${height} inches,</b>
     <b class="info-text" >Weight: ${weight} lbs</b> 
   `;
-  infoContainer.classList.add("info-container");
-  infoContainer.appendChild(heightWeightStats);
-  infoContainer.appendChild(moveMainContainer);
-  bodyContainer.appendChild(infoContainer);
+  return heightWeightStats;
 };
 
+// Get every version the Pokemon appeared in.
+const getPokeVersions = (gameIndices) => {
+  const versions = [];
+  gameIndices.map((gameIndex) => {
+    versions.push(gameIndex.version.name);
+  });
+  return versions;
+};
+
+// filter the Pokemon's moves.
 const filterMoves = (moves) => {
-  const redBlue = {};
-  for (let element of moves) {
-    for (let version of element.version_group_details) {
-      switch (version.version_group.name) {
-        case "red-blue":
-        // redBlue[]
-      }
-    }
-  }
+  const moveNames = {};
+  moves.map((move) => {
+    moveNames[move.move.name] = move.move.url;
+  });
+  console.log(moveNames);
 };
 
 // Fills the header name text and pokemon image.
 const initNameText = (data) => {
   const { name, types } = data;
   const { sprites } = data;
-  const capitalizedName = name[0].toUpperCase() + name.slice(1);
   const typeText = document.createElement("h1");
+  typeText.innerHTML = `<b>- Type(s): (</b>`;
+  typeText.classList.add("name-text");
+  pokemonNameContainer.appendChild(getNameEl(name));
+  pokemonNameContainer.appendChild(typeText);
+  processPokeType(types, pokemonNameContainer);
+  processPokeImg(sprites);
+};
+
+// Returns element containing the Pokemon's name.
+const getNameEl = (name) => {
+  const capitalizedName = name[0].toUpperCase() + name.slice(1);
   const nameEl = document.createElement("b");
   nameEl.classList.add("name-text");
   nameEl.innerText = `${capitalizedName}`;
   pokemonName.classList.add("name-text");
-  typeText.innerHTML = `<b>- Type(s): (</b>`;
-  typeText.classList.add("name-text");
-  pokemonNameContainer.appendChild(nameEl);
-  pokemonNameContainer.appendChild(typeText);
-  processPokeType(types, pokemonNameContainer);
-  processPokeImg(sprites);
+  return nameEl;
 };
 
 // Gets the types of the pokemon.
