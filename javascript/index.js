@@ -47,26 +47,21 @@ genSelect.innerHTML = `
   </div>
 `;
 
+// Move containers.
 const moveMainContainer = document.createElement("div");
 const movePanelContainer = document.createElement("div");
 const moveInfoContainer = document.createElement("div");
 moveMainContainer.classList.add("columns");
 movePanelContainer.classList.add("column");
 moveInfoContainer.classList.add("column");
-moveMainContainer.appendChild(movePanelContainer);
-moveMainContainer.appendChild(moveInfoContainer);
 
 movePanelContainer.innerHTML = `
-  <article class="panel is-info">
+  <article id="move-panel" class="panel is-info">
     <p class="panel-heading">
-      Info
+      Move List
     </p>
     <p class="panel-tabs">
       <a class="is-active">All</a>
-      <a>Public</a>
-      <a>Private</a>
-      <a>Sources</a>
-      <a>Forks</a>
     </p>
     <div class="panel-block">
       <p class="control has-icons-left">
@@ -76,19 +71,26 @@ movePanelContainer.innerHTML = `
         </span>
       </p>
     </div>
-    <a class="panel-block is-active">
-      <span class="panel-icon">
-        <i class="fas fa-book" aria-hidden="true"></i>
-      </span>
-      bulma
-    </a>
-    <a class="panel-block">
-      <span class="panel-icon">
-        <i class="fas fa-book" aria-hidden="true"></i>
-      </span>
-      marksheet
-    </a>
   </article>
+`;
+
+// Creates the modal and fills it with the appropiate HTML.
+const modal = document.createElement("div");
+modal.classList.add("modal");
+modal.innerHTML = `
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Modal title</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+      <!-- Content ... -->
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button">Cancel</button>
+    </footer>
+  </div>
 `;
 
 // Initialize the body container, which contain all the indiviual pokemons info.
@@ -98,6 +100,20 @@ bodyContainer.innerHTML = `
     <h1 id="pokemonName">Select a pokemon from any generation!!</h1>
   </div>
 `;
+
+// Adds modal to body container so it can be activated when needed and
+// adds an event listener to the modal background to disable the modal
+// on click.
+bodyContainer.appendChild(modal);
+const modalCard = document.querySelector(".modal-card");
+const modalBackground = document.querySelector(".modal-background");
+const modalTitle = document.querySelector(".modal-card-title");
+const modalContent = document.querySelector(".modal-card-body");
+const modalContentContainer = document.createElement("div");
+modalContent.appendChild(modalContentContainer);
+modalBackground.addEventListener("click", () => {
+  modal.classList.remove("is-active");
+});
 
 // Grabs some DOM elements to manipulate.
 const pokemonNameContainer = document.querySelector("#pokemonNameContainer");
@@ -247,12 +263,12 @@ const getPokemonData = async (pokemon) => {
 const initInfoText = (data) => {
   if (!data) return;
   const { height, weight, moves, game_indices } = data;
-  filterMoves(moves);
   infoContainer.classList.add("info-container");
   infoContainer.appendChild(getVersionsEl(game_indices));
   infoContainer.appendChild(getPhysicalEl(height, weight));
   infoContainer.appendChild(moveMainContainer);
   bodyContainer.appendChild(infoContainer);
+  filterMoves(moves);
 };
 
 // Return an element containing all the versions the Pokemon
@@ -292,13 +308,83 @@ const getPokeVersions = (gameIndices) => {
   return versions;
 };
 
-// filter the Pokemon's moves.
+// Filters the Pokemon's moves and adds them to the move panel.
 const filterMoves = (moves) => {
-  const moveNames = {};
-  moves.map((move) => {
-    moveNames[move.move.name] = move.move.url;
-  });
-  console.log(moveNames);
+  moveMainContainer.appendChild(movePanelContainer);
+  moveMainContainer.appendChild(moveInfoContainer);
+  const filteredMoves = moves.slice(0, 5);
+  const movePanel = document.querySelector("#move-panel");
+  for (let moveIndex of filteredMoves) {
+    const { name } = moveIndex.move;
+    const option = document.createElement("a");
+    option.classList.add("panel-block");
+    option.innerHTML = `
+      <b>${name}</b>
+    `;
+    option.addEventListener("click", () => {
+      onMoveSelect(moveIndex);
+    });
+    movePanel.appendChild(option);
+  }
+};
+
+const onMoveSelect = async (moveIndex) => {
+  clearContainer(modalContent);
+  const { url } = moveIndex.move;
+  const moreMoveData = await getMoveData(url);
+  const { id } = moreMoveData;
+  const { name } = moveIndex.move;
+  console.log(moreMoveData);
+  modal.classList.add("is-active");
+  modalTitle.innerText = `${name.toUpperCase()} - ID: ${id}`;
+  modalContent.appendChild(getMoveStatsEl(moreMoveData));
+  modalContent.appendChild(createDivider());
+  modalContent.appendChild(getMoveContestDataEl(moreMoveData));
+};
+
+const getMoveStatsEl = (moreMoveData) => {
+  const { power, accuracy, type, pp } = moreMoveData;
+  const moveStatsContainer = document.createElement("div");
+  moveStatsContainer.innerHTML = `
+    <label><b>MOVE STATS<b/></label>
+    <div class="columns" >
+      <div class="column" >
+        <b>Power: ${power}</b>
+      </div>
+      <div class="column" >
+        <b>Accuracy: ${accuracy}</b>
+      </div>
+      <div class="column" >
+        <b>Type: ${type.name.toUpperCase()}</b>
+      </div>
+      <div class="column" >
+        <b>PP: ${pp}</b>
+      </div>
+    </div>
+  `;
+  return moveStatsContainer;
+};
+
+const getMoveContestDataEl = (moreMoveData) => {
+  const { contest_type, damage_class } = moreMoveData;
+  const contestContainer = document.createElement("div");
+  contestContainer.innerHTML = `
+    <label><b>CONTEST STATS<b/></label>
+    <div class="columns" >
+      <div class="column" >
+        <b>Contest Type: ${contest_type.name.toUpperCase()}</b>
+      </div>
+      <div class="column" >
+        <b>Damage Class: ${damage_class.name.toUpperCase()}</b>
+      </div>
+    </div>
+  `;
+  return contestContainer;
+};
+
+const getMoveData = async (moveURL) => {
+  const response = await axios.get(moveURL);
+  return response.data;
 };
 
 // Fills the header name text and pokemon image.
@@ -356,10 +442,10 @@ const processPokeImg = (sprites) => {
 };
 
 // Creates a divider.
-const createDivider = (element) => {
+const createDivider = () => {
   const divider = document.createElement("hr");
   divider.classList.add("divider");
-  element.appendChild(divider);
+  return divider;
 };
 
 // Clears any container with elements passed to it.
