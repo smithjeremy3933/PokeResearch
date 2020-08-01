@@ -82,13 +82,13 @@ modal.innerHTML = `
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">Modal title</p>
-      <button class="delete" aria-label="close"></button>
+      <button id="modal-delete-btn" class="delete" aria-label="close"></button>
     </header>
     <section class="modal-card-body">
       <!-- Content ... -->
     </section>
     <footer class="modal-card-foot">
-      <button class="button">Cancel</button>
+      <button id="modal-cancel-btn" class="button">Cancel</button>
     </footer>
   </div>
 `;
@@ -107,11 +107,19 @@ bodyContainer.innerHTML = `
 bodyContainer.appendChild(modal);
 const modalCard = document.querySelector(".modal-card");
 const modalBackground = document.querySelector(".modal-background");
+const modalDeleteBtn = document.querySelector("#modal-delete-btn");
+const modalCancelBtn = document.querySelector("#modal-cancel-btn");
 const modalTitle = document.querySelector(".modal-card-title");
 const modalContent = document.querySelector(".modal-card-body");
 const modalContentContainer = document.createElement("div");
 modalContent.appendChild(modalContentContainer);
 modalBackground.addEventListener("click", () => {
+  modal.classList.remove("is-active");
+});
+modalDeleteBtn.addEventListener("click", () => {
+  modal.classList.remove("is-active");
+});
+modalCancelBtn.addEventListener("click", () => {
   modal.classList.remove("is-active");
 });
 
@@ -330,16 +338,21 @@ const filterMoves = (moves) => {
 
 const onMoveSelect = async (moveIndex) => {
   clearContainer(modalContent);
-  const { url } = moveIndex.move;
+  const { name, url } = moveIndex.move;
   const moreMoveData = await getMoveData(url);
-  const { id } = moreMoveData;
-  const { name } = moveIndex.move;
+  const { id, damage_class } = moreMoveData;
   console.log(moreMoveData);
   modal.classList.add("is-active");
-  modalTitle.innerText = `${name.toUpperCase()} - ID: ${id}`;
-  modalContent.appendChild(getMoveStatsEl(moreMoveData));
-  modalContent.appendChild(createDivider());
-  modalContent.appendChild(getMoveContestDataEl(moreMoveData));
+  modalTitle.innerText = `
+    ${name.toUpperCase()} - ID: ${id} - Class: ${damage_class.name.toUpperCase()}
+  `;
+  modalContent.append(
+    getMoveStatsEl(moreMoveData),
+    createDivider(),
+    getEffectsStatsEl(moreMoveData),
+    createDivider(),
+    getMoveContestDataEl(moreMoveData)
+  );
 };
 
 const getMoveStatsEl = (moreMoveData) => {
@@ -349,16 +362,16 @@ const getMoveStatsEl = (moreMoveData) => {
     <label><b>MOVE STATS<b/></label>
     <div class="columns" >
       <div class="column" >
-        <b>Power: ${power}</b>
+        <b>Power: ${!power ? "N/A" : power}</b>
       </div>
       <div class="column" >
-        <b>Accuracy: ${accuracy}</b>
+        <b>Accuracy: ${!accuracy ? "N/A" : accuracy}</b>
       </div>
       <div class="column" >
         <b>Type: ${type.name.toUpperCase()}</b>
       </div>
       <div class="column" >
-        <b>PP: ${pp}</b>
+        <b>PP: ${!pp ? "N/A" : pp}</b>
       </div>
     </div>
   `;
@@ -366,7 +379,7 @@ const getMoveStatsEl = (moreMoveData) => {
 };
 
 const getMoveContestDataEl = (moreMoveData) => {
-  const { contest_type, damage_class } = moreMoveData;
+  const { contest_type, contest_combos } = moreMoveData;
   const contestContainer = document.createElement("div");
   contestContainer.innerHTML = `
     <label><b>CONTEST STATS<b/></label>
@@ -375,11 +388,67 @@ const getMoveContestDataEl = (moreMoveData) => {
         <b>Contest Type: ${contest_type.name.toUpperCase()}</b>
       </div>
       <div class="column" >
-        <b>Damage Class: ${damage_class.name.toUpperCase()}</b>
+        <b>
+        Use Before: ${
+          !contest_combos
+            ? "N/A"
+            : !contest_combos.normal.use_before
+            ? "N/A"
+            : contest_combos.normal.use_before.map((move) => {
+                return move.name.toUpperCase();
+              })
+        }
+        </b>
+      </div>
+      <div class="column" >
+        <b>
+        Use After: ${
+          !contest_combos
+            ? "N/A"
+            : !contest_combos.normal.use_after
+            ? "N/A"
+            : contest_combos.normal.use_after.map((move) => {
+                return move.name.toUpperCase();
+              })
+        }
+        </b>
       </div>
     </div>
   `;
   return contestContainer;
+};
+
+const getEffectsStatsEl = (moreData) => {
+  const { effect_entries, effect_changes, effect_chance } = moreData;
+  const effectEntries = processEffectEntries(effect_entries, effect_chance);
+  const effectsContainer = document.createElement("div");
+  effectsContainer.innerHTML = `
+    <label><b>EFFECTS STATS<b/></label>
+    <div class="columns">
+      <div class="column" >
+        <div id="effect-entries">${effectEntries}</div>
+        <div class="columns">
+          <div class="column">
+            <b>Effect Chance: ${!effect_chance ? "N/A" : effect_chance}</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return effectsContainer;
+};
+
+const processEffectEntries = (effectEntries, effectChance) => {
+  if (effectEntries[0] === null) {
+    return "NO EFFECT ENTRIES";
+  }
+  const { effect } = effectEntries[0];
+
+  if (effectChance === null) {
+    return effect;
+  }
+
+  return effect.replace("$effect_chance", effectChance);
 };
 
 const getMoveData = async (moveURL) => {
