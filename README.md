@@ -4,6 +4,10 @@ Dependencies: Axios, Bulma CSS
 
 A pokemon reasearch app to look-up the stats of all our favorite Pokemon. Search through any generation in the Pokemon universe! I built this application mostly to practice vanilla javascript, but I did quite enjoy seeing all my favorite pokemon again.
 
+# Pictures
+
+![poke-research-pic](https://user-images.githubusercontent.com/51000275/89110994-951f4180-d405-11ea-810f-53a8c33817ec.PNG)
+
 # To Test
 
 In the folder you want to store the files:
