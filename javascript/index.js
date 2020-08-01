@@ -65,7 +65,7 @@ movePanelContainer.innerHTML = `
     </p>
     <div class="panel-block">
       <p class="control has-icons-left">
-        <input class="input is-info" type="text" placeholder="Search">
+        <input id="move-input" class="input is-info" type="text" placeholder="Search">
         <span class="icon is-left">
           <i class="fas fa-search" aria-hidden="true"></i>
         </span>
@@ -210,21 +210,23 @@ const searchData = (searchTerm) => {
   }
 
   clearPokemonDropdown();
-  let topTwentyPokemon = getToptwentyResults(currentGenData, searchTerm);
+  let topTenPokemon = getTopTenResults(currentGenData, searchTerm);
   pokemonDropdown.classList.add("is-active");
 
-  for (let pokemon of topTwentyPokemon) {
+  for (let pokemon of topTenPokemon) {
     processPokeDropdown(pokemon, pokeDropdownContent);
   }
 };
 
-// Gets the top twenty pokemon.
-const getToptwentyResults = (genData, searchTerm) => {
+// Gets the top ten pokemon.
+const getTopTenResults = (genData, searchTerm) => {
   let filteredPokemon = genData.filter((pokemon) => {
-    return pokemon.name.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+    if (pokemon.name.toLowerCase().startsWith(searchTerm.toLowerCase(), 0)) {
+      return pokemon.name.toUpperCase();
+    }
   });
-  let topTwentyPokemon = filteredPokemon.slice(0, 20);
-  return topTwentyPokemon;
+  let topTenPokemon = filteredPokemon.slice(0, 10);
+  return topTenPokemon;
 };
 
 // Adds pokemon to the pokemon search dropdown.
@@ -272,11 +274,20 @@ const initInfoText = (data) => {
   if (!data) return;
   const { height, weight, moves, game_indices } = data;
   infoContainer.classList.add("info-container");
-  infoContainer.appendChild(getVersionsEl(game_indices));
-  infoContainer.appendChild(getPhysicalEl(height, weight));
-  infoContainer.appendChild(moveMainContainer);
-  bodyContainer.appendChild(infoContainer);
-  filterMoves(moves);
+  infoContainer.append(
+    getVersionsEl(game_indices),
+    getPhysicalEl(height, weight),
+    moveMainContainer
+  );
+  bodyContainer.append(infoContainer);
+  moveMainContainer.append(movePanelContainer, moveInfoContainer);
+  const moveInput = document.querySelector("#move-input");
+  const movePanel = document.querySelector("#move-panel");
+  moveInput.addEventListener("input", (event) => {
+    searchMoves(event.target.value.substr(0, 20), moves);
+  });
+  moveInput.value = "";
+  clearPanelcontent(movePanel);
 };
 
 // Return an element containing all the versions the Pokemon
@@ -317,19 +328,22 @@ const getPokeVersions = (gameIndices) => {
 };
 
 // Filters the Pokemon's moves and adds them to the move panel.
-const filterMoves = (moves) => {
-  moveMainContainer.appendChild(movePanelContainer);
-  moveMainContainer.appendChild(moveInfoContainer);
-  const filteredMoves = moves.slice(0, 5);
+const searchMoves = (seachTerm, moves) => {
+  if (!seachTerm) return;
+  const filteredMoves = getTopFiveMoves(seachTerm, moves);
+  console.log(filteredMoves);
   const movePanel = document.querySelector("#move-panel");
+  const moveInput = document.querySelector("#move-input");
+  clearPanelcontent(movePanel);
   for (let moveIndex of filteredMoves) {
     const { name } = moveIndex.move;
     const option = document.createElement("a");
     option.classList.add("panel-block");
     option.innerHTML = `
-      <b>${name}</b>
+      <b>${name.toUpperCase()}</b>
     `;
     option.addEventListener("click", () => {
+      moveInput.value = moveIndex.move.name.toUpperCase();
       onMoveSelect(moveIndex);
     });
     movePanel.appendChild(option);
@@ -353,6 +367,22 @@ const onMoveSelect = async (moveIndex) => {
     createDivider(),
     getMoveContestDataEl(moreMoveData)
   );
+};
+
+const getTopFiveMoves = (searchTerm, moves) => {
+  if (!moves || !searchTerm) return;
+  let filteredMoves = moves
+    .filter((moveIndex) => {
+      if (
+        moveIndex.move.name
+          .toLowerCase()
+          .startsWith(searchTerm.toLowerCase(), 0)
+      ) {
+        return moveIndex.move;
+      }
+    })
+    .slice(0, 5);
+  return filteredMoves;
 };
 
 const getMoveStatsEl = (moreMoveData) => {
@@ -429,7 +459,9 @@ const getEffectsStatsEl = (moreData) => {
         <div id="effect-entries">${effectEntries}</div>
         <div class="columns">
           <div class="column">
-            <b>Effect Chance: ${!effect_chance ? "N/A" : effect_chance}</b>
+            <b>Effect Chance: ${
+              !effect_chance ? "N/A" : effect_chance + "%"
+            }</b>
           </div>
         </div>
       </div>
@@ -524,11 +556,18 @@ const clearContainer = (container) => {
   }
 };
 
+const clearPanelcontent = (panelContainer) => {
+  const permenantChildElCount = 3;
+  while (panelContainer.childElementCount > permenantChildElCount) {
+    panelContainer.removeChild(panelContainer.lastChild);
+  }
+};
+
 // The pokemon search dropdown input. Listens for
 // whenever a user types in the input field
 const input = document.querySelector("#genSearch");
 input.addEventListener("input", (event) => {
-  searchData(event.target.value);
+  searchData(event.target.value.substr(0, 20));
 });
 
 // Closes the dropdown menus when clicking away.
