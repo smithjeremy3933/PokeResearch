@@ -365,8 +365,37 @@ const onMoveSelect = async (moveIndex) => {
     createDivider(),
     getEffectsStatsEl(moreMoveData),
     createDivider(),
-    getMoveContestDataEl(moreMoveData)
+    getMoveContestDataEl(moreMoveData),
+    createDivider(),
+    getMoveLevelEl(moveIndex)
   );
+};
+
+const getMoveLevelEl = (moveIndex) => {
+  const { name } = moveIndex.move;
+  const { version_group_details } = moveIndex;
+  const moveLevelEl = document.createElement("div");
+  moveLevelEl.innerHTML = `
+    <label><b>MOVE LEVELS<b/></label>
+    <div class="columns">
+      <div class="column">
+        <b>${name.toUpperCase()}</b>
+      </div>
+      <div class="column">
+        <b>
+        Moves:
+          ${
+            !version_group_details
+              ? "N/A"
+              : version_group_details.map((version) => {
+                  return `\nLevel Learned at ${version.level_learned_at}`;
+                })
+          }
+        </b>
+      </div>
+    </div>
+  `;
+  return moveLevelEl;
 };
 
 const getTopFiveMoves = (searchTerm, moves) => {
